@@ -237,4 +237,64 @@ int main(void) {
 ## 7. podman save / podman loadp: qu'est-ce qui est transfere ?
 - On transfere l'image OCI pas seulement le binaire.
 - Cela reproduit l'environnement conteneur de maniere tres fidele.
+## Reponses (Section 4.1.6 - Questions)
+
+## 1. Comparer le binaire resultant avec d'autres etudiants: est-il identique ?
+- En principe oui, si tout le monde build exactement la meme derivation (meme `flake.lock`, meme source, meme plateforme cible).
+- En pratique, il peut differer si la plateforme (`x86_64-linux` vs `aarch64-linux`)
+
+## 2. Comparer le chemin d'installation du binaire avec d'autres etudiants: est-il identique ?
+- Le chemin dans `/nix/store` est derive d'un hash des entrees de build.
+- Donc il est identique entre etudiants si les entrees sont strictement identiques; sinon le hash (et le chemin) change.
+
+## 3. Si on build plusieurs fois, obtient-on le meme resultat ?
+- Oui, c'est l'objectif de Nix: build deterministe et reproductible.
+
+## 4. Difference entre `nix shell nixpkgs#hello` et `nix profile add nixpkgs#hello`
+- `nix shell`: environnement temporaire de session (ephemere)..
+- `nix profile add`: installation persistante dans le profil utilisateur.
+
+## 5. Role du Nix store (`/nix/store`) et pourquoi il est immutable
+- Le store contient les artefacts buildes/adresses par hash (contenu + dependances).
+
+
+## 6. Que fait `nix flake lock` et pourquoi c'est critique pour la reproductibilite ?
+- Il fige les versions exactes des dependances (commits/revisions) dans `flake.lock`.
+- Sans lock, les entrees peuvent evoluer et produire des resultats differents dans le temps.
+
+
+## 8. Si une dependance amont est mise a jour, comment Nix maintient la reproductibilite ?
+- Tant que `flake.lock` n'est pas mis a jour, Nix continue d'utiliser les revisions verrouillees.
+- La mise a jour est explicite (`nix flake update`), donc controlee et versionnee.
+
+## 9. Flake minimale pour partager un environnement Java + GCC, et faut-il partager `flake.lock` ?
+- Une flake minimale expose un `devShell` avec `pkgs.jdk` et `pkgs.gcc`.
+- Oui, il faut partager `flake.lock` pour que tout le monde resolve exactement les memes versions.
+
+
+## Reponses (Section 4.2 - General questions)
+
+## 1. Avantages de Nix vs Docker/Podman
+- Nix cible d'abord la reproductibilite au build (description declarative fine des dependances).
+- Docker/Podman ciblent surtout l'isolation et la reproductibilite de l'environnement d'execution.
+- Nix facilite la composition d'environnements dev et les rollbacks; les conteneurs facilitent la distribution runtime.
+
+## 2. Est-il sur d'executer un container/image d'une source inconnue ?
+- Pas totalement: un container non fiable peut embarquer malware, backdoors, cryptominers, etc.
+- L'isolation (namespaces/cgroups/seccomp/capabilities) reduit le risque mais n'elimine pas les failles kernel, mauvaises configs ou escalades de privilege.
+- Bonnes pratiques: verifier la provenance/signature, executer sans privileges, limiter reseau/volumes/capabilities.
+
+## 3. IA & reproductibilite: meme prompt + meme modele => meme sortie ?
+- Pas toujours.
+- Avec temperature > 0 et echantillonnage (`top-p`), il y a de l'aleatoire.
+- Meme a temperature 0, de petites variations peuvent venir de la version du service, du runtime, du hardware ou de changements de tokenisation/implementation.
+
+## 4. Partager l'estimateur Monte Carlo pi avec quelqu'un sans Nix
+- partager le code source + instructions de compilation standard.
+
+- Nix: `nix bundle` pour produire un artefact plus facilement executable hors environnement Nix.
+
+## 5. Interet pour apprendre LaTeX/Typst style UMONS
+- Oui, tres utile pour produire des rapports propres, versionnables et reproductibles.
+- LaTeX a un ecosysteme tres utilisé. 
 
